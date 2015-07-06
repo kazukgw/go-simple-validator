@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -108,6 +109,18 @@ func TimeRange(value, from, to time.Time) bool {
 	return from.UnixNano() <= value.UnixNano() && value.UnixNano() <= to.UnixNano()
 }
 
+var Messages = struct {
+	NotEmpty, Range, StringSize, Regexp, Equal, Contain, TimeRange string
+}{
+	NotEmpty:   "can't be blank",
+	Range:      "must be between %v and %v",
+	StringSize: "string length must be between %v and %v",
+	Regexp:     "must match with pattern\"%v\"",
+	Equal:      "must be %v",
+	Contain:    "must be one of following values. %v",
+	TimeRange:  "must be between %v and %v",
+}
+
 type Validator struct {
 	Errors map[string]string
 }
@@ -131,49 +144,85 @@ func (v *Validator) SetError(result bool, key string, msg ...string) {
 }
 
 func (v *Validator) NotEmpty(value interface{}, key string, msg ...string) bool {
+	var m string
+	if len(msg) == 0 {
+		m = fmt.Sprintf(Messages.NotEmpty)
+	} else {
+		m = fmt.Sprintf(msg[0])
+	}
 	result := NotEmpty(value)
-	v.SetError(result, key, msg...)
+	v.SetError(result, key, m)
 	return result
 }
 
 func (v *Validator) Range(value, min, max int, key string, msg ...string) bool {
+	var m string
+	if len(msg) == 0 {
+		m = fmt.Sprintf(Messages.Range, min, max)
+	} else {
+		m = fmt.Sprintf(msg[0], min, max)
+	}
 	result := Range(value, min, max)
-	v.SetError(result, key, msg...)
+	v.SetError(result, key, m)
 	return result
 }
 
 func (v *Validator) StringSize(value string, min, max int, key string, msg ...string) bool {
+	var m string
+	if len(msg) == 0 {
+		m = fmt.Sprintf(Messages.StringSize, min, max)
+	} else {
+		m = fmt.Sprintf(msg[0], min, max)
+	}
 	result := StringSize(value, min, max)
-	v.SetError(result, key, msg...)
+	v.SetError(result, key, m)
 	return result
 }
 
 func (v *Validator) Regexp(value string, pattern interface{}, key string, msg ...string) bool {
+	var m string
+	if len(msg) == 0 {
+		m = fmt.Sprintf(Messages.Regexp, pattern)
+	} else {
+		m = fmt.Sprintf(msg[0], pattern)
+	}
 	result := Regexp(value, pattern)
-	v.SetError(result, key, msg...)
+	v.SetError(result, key, m)
 	return result
 }
 
 func (v *Validator) Equal(value, expected interface{}, key string, msg ...string) bool {
+	var m string
+	if len(msg) == 0 {
+		m = fmt.Sprintf(Messages.Equal, expected)
+	} else {
+		m = fmt.Sprintf(msg[0], expected)
+	}
 	result := Equal(value, expected)
-	v.SetError(result, key, msg...)
+	v.SetError(result, key, m)
 	return result
 }
 
 func (v *Validator) Contain(value, expected interface{}, key string, msg ...string) bool {
+	var m string
+	if len(msg) == 0 {
+		m = fmt.Sprintf(Messages.Contain, expected)
+	} else {
+		m = fmt.Sprintf(msg[0], expected)
+	}
 	result := Contain(value, expected)
-	v.SetError(result, key, msg...)
+	v.SetError(result, key, m)
 	return result
 }
 
 func (v *Validator) TimeRange(value, from, to time.Time, key string, msg ...string) bool {
+	var m string
+	if len(msg) == 0 {
+		m = fmt.Sprintf(Messages.Contain, from, to)
+	} else {
+		m = fmt.Sprintf(msg[0], from, to)
+	}
 	result := TimeRange(value, from, to)
-	v.SetError(result, key, msg...)
-	return result
-}
-
-func (v *Validator) WithFunc(fn func(v *Validator) bool, key string, msg ...string) bool {
-	result := fn(new(Validator))
-	v.SetError(result, key, msg...)
+	v.SetError(result, key, m)
 	return result
 }

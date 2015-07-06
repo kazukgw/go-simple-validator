@@ -170,3 +170,25 @@ func TestTimeRange(t *testing.T) {
 		t.Errorf("TiemRange func does not work")
 	}
 }
+
+type CustomValidator struct {
+	*Validator
+}
+
+func (cv *CustomValidator) EqualFoo(value string, key string, msg ...string) bool {
+	result := value == "foo"
+	cv.SetError(result, key, msg...)
+	return result
+}
+
+func TestCustomValidator(t *testing.T) {
+	cv := CustomValidator{New()}
+	result := cv.EqualFoo("foo", "foo", "foo is foo")
+	if !result {
+		t.Errorf("CustomValidator does not work")
+	}
+	_ = cv.EqualFoo("bar", "foo", "foo is foo")
+	if cv.Errors["foo"] != "foo is foo" {
+		t.Errorf("CustomValidator does not work")
+	}
+}
